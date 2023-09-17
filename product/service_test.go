@@ -105,6 +105,66 @@ func TestService_CalculatePacksConfiguration(t *testing.T) {
 				},
 			},
 		},
+		"scenario3": {
+			qty: 281,
+			packs: &mock.PackRepository{
+				GetByProductIDFn: func(ctx context.Context, productID uint64) ([]uint64, error) {
+					return []uint64{210, 250, 260, 280, 500, 1000, 2000, 5000}, nil
+				},
+			},
+			expectedRes: []shipping.PackConfig{
+				{
+					Count: 2,
+					Size:  210,
+				},
+			},
+		},
+		"scenario4": {
+			qty: 301,
+			packs: &mock.PackRepository{
+				GetByProductIDFn: func(ctx context.Context, productID uint64) ([]uint64, error) {
+					return []uint64{200, 300, 500, 1000, 2000, 5000}, nil
+				},
+			},
+			expectedRes: []shipping.PackConfig{
+				{
+					Count: 2,
+					Size:  200,
+				},
+			},
+		},
+		"scenario5": {
+			qty: 1251,
+			packs: &mock.PackRepository{
+				GetByProductIDFn: func(ctx context.Context, productID uint64) ([]uint64, error) {
+					return []uint64{250, 600}, nil
+				},
+			},
+			expectedRes: []shipping.PackConfig{
+				{
+					Count: 2,
+					Size:  600,
+				},
+				{
+					Count: 1,
+					Size:  250,
+				},
+			},
+		},
+		"scenario6": {
+			qty: 1499,
+			packs: &mock.PackRepository{
+				GetByProductIDFn: func(ctx context.Context, productID uint64) ([]uint64, error) {
+					return []uint64{250, 600}, nil
+				},
+			},
+			expectedRes: []shipping.PackConfig{
+				{
+					Count: 6,
+					Size:  250,
+				},
+			},
+		},
 		"configurationNotFound_returnErrNotFound": {
 			qty: 1,
 			packs: &mock.PackRepository{

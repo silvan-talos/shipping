@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"math"
 	"sort"
 
 	"github.com/silvan-talos/shipping"
@@ -33,7 +34,6 @@ type ServiceArgs struct {
 }
 
 func (s *service) CalculatePacksConfiguration(ctx context.Context, id, quantity uint64) ([]shipping.PackConfig, error) {
-	qty := int64(quantity)
 	packSizes, err := s.packs.GetByProductID(ctx, id)
 	if err != nil {
 		if errors.Is(err, shipping.ErrNotFound) {
@@ -43,11 +43,79 @@ func (s *service) CalculatePacksConfiguration(ctx context.Context, id, quantity 
 		log.Println("failed to get packs config, err:", err)
 		return nil, shipping.InternalServerErr
 	}
-	// sort packSizes descending
+	conf, minOverhead := overheadAlgorithm(int64(quantity), packSizes)
+	packConf, overhead := divisionAlgorithm(int64(quantity), packSizes)
+	// choose better solution based on configuration accuracy
+	if overhead > minOverhead {
+		packConf = map[uint64]int64{conf.Size: conf.Count}
+	}
+	// sort by pack size desc
+	keys := make([]uint64, 0, len(packConf))
+	for k := range packConf {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] > keys[j]
+	})
+	// convert packs to meaningful struct
+	packs := make([]shipping.PackConfig, 0, len(packConf))
+	for _, k := range keys {
+		if packConf[k] > 0 {
+			packs = append(packs, shipping.PackConfig{
+				Count: packConf[k],
+				Size:  k,
+			})
+		}
+	}
+	return packs, nil
+}
+
+// overheadAlgorithm returns a configuration based on min items to send in min pack count
+func overheadAlgorithm(qty int64, packSizes []uint64) (shipping.PackConfig, int64) {
+	// sort packSizes asc
+	sort.Slice(packSizes, func(i, j int) bool {
+		return packSizes[i] < packSizes[j]
+	})
+	overheads := make(map[uint64]int64)
+	packQuantities := make(map[uint64]int64)
+	for _, packSize := range packSizes {
+		packQuantities[packSize] = int64(math.Ceil(float64(qty) / float64(packSize)))
+	}
+	var minOh int64 = math.MaxInt64
+	for size, amt := range packQuantities {
+		overheads[size] = (int64(size) * amt) - qty
+		if overheads[size] < minOh {
+			minOh = overheads[size]
+		}
+	}
+	var minPackSize int64 = math.MaxInt64
+	sameOhPacks := make(map[uint64]int64)
+	for size, oh := range overheads {
+		if oh == minOh {
+			sameOhPacks[size] = packQuantities[size]
+			if packQuantities[size] < minPackSize {
+				minPackSize = packQuantities[size]
+			}
+		}
+	}
+	var res shipping.PackConfig
+	for size, count := range sameOhPacks {
+		if count == minPackSize {
+			res.Size = size
+			res.Count = count
+			break
+		}
+	}
+	return res, minOh
+}
+
+// divisionAlgorithm creates a configuration based on bigger size first
+func divisionAlgorithm(qty int64, packSizes []uint64) (map[uint64]int64, int64) {
+	initialQty := qty
+	// sort sizes descending
 	sort.Slice(packSizes, func(i, j int) bool {
 		return packSizes[i] > packSizes[j]
 	})
-	log.Printf("pack sizes {%v}\n", packSizes)
 	packConf := make(map[uint64]int64)
 	for _, size := range packSizes {
 		if qty >= int64(size) {
@@ -60,17 +128,13 @@ func (s *service) CalculatePacksConfiguration(ctx context.Context, id, quantity 
 		packConf[packSizes[len(packSizes)-1]]++
 	}
 	optimizePacks(packSizes, packConf)
-	// convert packs to meaningful struct
-	packs := make([]shipping.PackConfig, 0, len(packConf))
+	// calculate overhead
+	var s int64 = 0
 	for size, count := range packConf {
-		if count > 0 {
-			packs = append(packs, shipping.PackConfig{
-				Count: count,
-				Size:  size,
-			})
-		}
+		s += int64(size) * count
 	}
-	return packs, nil
+	overhead := s - initialQty
+	return packConf, overhead
 }
 
 // optimizePacks creates an optimal amount of packages by merging smaller packages into bigger ones if possible
