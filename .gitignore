@@ -22,3 +22,7 @@ go.work
 
 # GoLand files
 .idea
+
+# Terraform files
+.terraform*
+
