@@ -81,5 +81,5 @@ resource "aws_codebuild_project" "shipping" {
     location  = "https://github.com/silvan-talos/shipping.git"
     buildspec = "infrastructure/buildspec.yml"
   }
-  source_version = "feature/infrastructure"
+  source_version = "main"
 }

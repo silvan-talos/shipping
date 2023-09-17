@@ -43,7 +43,7 @@ resource "aws_codepipeline" "cd_pipeline" {
       configuration = {
         ConnectionArn    = aws_codestarconnections_connection.github.arn
         FullRepositoryId = "silvan-talos/shipping"
-        BranchName       = "feature/infrastructure"
+        BranchName       = "main"
       }
 
     }
