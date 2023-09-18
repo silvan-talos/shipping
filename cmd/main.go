@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/silvan-talos/shipping/http"
-	"github.com/silvan-talos/shipping/mock"
+	"github.com/silvan-talos/shipping/inmem"
 	"github.com/silvan-talos/shipping/product"
 )
 
@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("failed to create listener, error:", err)
 	}
 	productService := product.NewService(product.ServiceArgs{
-		Packs: &mock.PackRepository{},
+		Packs: inmem.NewPackRepository(),
 	})
 	server := http.NewServer(http.ServerArgs{
 		ProductService: productService,
