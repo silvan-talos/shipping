@@ -6,7 +6,7 @@ definitions:
       pack_size:
         type: integer
     type: object
-host: https://cbhbw91cn7.execute-api.eu-west-1.amazonaws.com
+host: cbhbw91cn7.execute-api.eu-west-1.amazonaws.com
 info:
   contact: {}
   description: Shipping is a small API that calculates packaging configuration for
@@ -90,4 +90,6 @@ paths:
       tags:
       - packaging
       - products
+schemes:
+- https
 swagger: "2.0"
