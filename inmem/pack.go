@@ -29,3 +29,9 @@ func (pr *packRepository) GetByProductID(_ context.Context, productID uint64) ([
 	return config, nil
 }
 
+func (pr *packRepository) UpdateConfig(_ context.Context, productID uint64, config []uint64) error {
+	pr.mtx.Lock()
+	defer pr.mtx.Unlock()
+	pr.configs[productID] = config
+	return nil
+}

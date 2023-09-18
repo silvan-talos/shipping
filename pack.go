@@ -17,6 +17,7 @@ var (
 
 type PackRepository interface {
 	GetByProductID(ctx context.Context, productID uint64) ([]uint64, error)
+	UpdateConfig(ctx context.Context, productID uint64, config []uint64) error
 }
 
 type PackConfig struct {
