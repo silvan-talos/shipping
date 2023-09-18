@@ -3,43 +3,48 @@ package product
 import (
 	"math"
 	"sort"
-
-	"github.com/silvan-talos/shipping"
 )
 
 // overheadAlgorithm returns a configuration based on min items to send in min pack count
-func overheadAlgorithm(qty int64, packSizes []uint64) (shipping.PackConfig, int64) {
+func overheadAlgorithm(qty int64, packSizes []uint64) (map[uint64]int64, int64) {
 	// sort packSizes asc
 	sort.Slice(packSizes, func(i, j int) bool {
 		return packSizes[i] < packSizes[j]
 	})
 	overheads := make(map[uint64]int64)
-	packQuantities := make(map[uint64]int64)
-	for _, packSize := range packSizes {
-		packQuantities[packSize] = int64(math.Ceil(float64(qty) / float64(packSize)))
+	packQuantities := make(map[uint64]map[uint64]int64)
+	for i, packSize := range packSizes {
+		packQuantities[packSize] = make(map[uint64]int64)
+		packQuantities[packSize][packSize] = qty / int64(packSize)
+		remainingQty := qty % int64(packSize)
+		for j := 0; j <= i && remainingQty != 0; j++ {
+			if remainingQty <= int64(packSizes[j]) {
+				packQuantities[packSize][packSizes[j]]++
+				break
+			}
+		}
 	}
 	var minOh int64 = math.MaxInt64
-	for size, amt := range packQuantities {
-		overheads[size] = (int64(size) * amt) - qty
+	for size, cfg := range packQuantities {
+		overheads[size] = calculateOverhead(qty, cfg)
 		if overheads[size] < minOh {
 			minOh = overheads[size]
 		}
 	}
 	var minPackSize int64 = math.MaxInt64
-	sameOhPacks := make(map[uint64]int64)
+	sameOhPacks := make(map[uint64]map[uint64]int64)
 	for size, oh := range overheads {
 		if oh == minOh {
 			sameOhPacks[size] = packQuantities[size]
-			if packQuantities[size] < minPackSize {
-				minPackSize = packQuantities[size]
+			if packSize := calculateSize(packQuantities[size]); packSize < minPackSize {
+				minPackSize = packSize
 			}
 		}
 	}
-	var res shipping.PackConfig
-	for size, count := range sameOhPacks {
-		if count == minPackSize {
-			res.Size = size
-			res.Count = count
+	var res = make(map[uint64]int64)
+	for _, cfg := range sameOhPacks {
+		if calculateSize(cfg) == minPackSize {
+			res = cfg
 			break
 		}
 	}
@@ -65,13 +70,7 @@ func divisionAlgorithm(qty int64, packSizes []uint64) (map[uint64]int64, int64) 
 		packConf[packSizes[len(packSizes)-1]]++
 	}
 	optimizePacks(packSizes, packConf)
-	// calculate overhead
-	var s int64 = 0
-	for size, count := range packConf {
-		s += int64(size) * count
-	}
-	overhead := s - initialQty
-	return packConf, overhead
+	return packConf, calculateOverhead(initialQty, packConf)
 }
 
 // optimizePacks creates an optimal amount of packages by merging smaller packages into bigger ones if possible
@@ -102,4 +101,21 @@ func zeroSubsequent(qty int64, packSizes []uint64, packs map[uint64]int64) {
 			packs[size] = 0
 		}
 	}
+}
+
+func calculateOverhead(qty int64, config map[uint64]int64) int64 {
+	var s int64 = 0
+	for size, count := range config {
+		s += int64(size) * count
+	}
+	overhead := s - qty
+	return overhead
+}
+
+func calculateSize(conf map[uint64]int64) int64 {
+	var s int64 = 0
+	for _, count := range conf {
+		s += count
+	}
+	return s
 }
