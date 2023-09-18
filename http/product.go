@@ -20,6 +20,17 @@ func (ph *productHandler) addRoutes(r *gin.RouterGroup) {
 	r.PUT("/:id/packaging", ph.updateProductPackaging)
 }
 
+//	@Summary		Get product packaging
+//	@Description	Calculates number of packets based on product configuration
+//	@Tags			packaging, products
+//	@Produce		json
+//	@Param			id	path		int64	true	"ID of the product"
+//	@Param			qty	query		int64	true	"Order quantity for product"
+//	@Success		200	{object}	[]shipping.PackConfig
+//	@Failure		400	{object}	object{error=string}
+//	@Failure		404
+//	@Failure		500
+//	@Router			/v1/products/{id}/packaging [get]
 func (ph *productHandler) getProductPackaging(c *gin.Context) {
 	productID := c.Param("id")
 	id, err := strconv.ParseUint(productID, 10, 64)
@@ -54,6 +65,18 @@ func (ph *productHandler) getProductPackaging(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+//	@Summary		Update product packaging configuration
+//	@Description	Updates configuration for the specified product
+//	@Tags			packaging, products
+//	@Accept			json
+//	@Produce		json
+//	@Param			id			path	int64		true	"ID of the product"
+//	@Param			pack_sizes	body	[]uint64	true	"The list of supported pack sizes"
+//	@Success		204
+//	@Failure		400	{object}	object{error=string}
+//	@Failure		404
+//	@Failure		500
+//	@Router			/v1/products/{id}/packaging [put]
 func (ph *productHandler) updateProductPackaging(c *gin.Context) {
 	productID := c.Param("id")
 	id, err := strconv.ParseUint(productID, 10, 64)

@@ -1,0 +1,139 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Shipping is a small API that calculates packaging configuration for a certain amount of ordered product quantity.",
+        "title": "Shipping API docs",
+        "contact": {},
+        "version": "1.0.0"
+    },
+    "host": "https://cbhbw91cn7.execute-api.eu-west-1.amazonaws.com",
+    "paths": {
+        "/v1/products/{id}/packaging": {
+            "get": {
+                "description": "Calculates number of packets based on product configuration",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "packaging",
+                    "products"
+                ],
+                "summary": "Get product packaging",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the product",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Order quantity for product",
+                        "name": "qty",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/shipping.PackConfig"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates configuration for the specified product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "packaging",
+                    "products"
+                ],
+                "summary": "Update product packaging configuration",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID of the product",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "The list of supported pack sizes",
+                        "name": "pack_sizes",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "shipping.PackConfig": {
+            "type": "object",
+            "properties": {
+                "number_of_packs": {
+                    "type": "integer"
+                },
+                "pack_size": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

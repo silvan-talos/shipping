@@ -1,0 +1,93 @@
+definitions:
+  shipping.PackConfig:
+    properties:
+      number_of_packs:
+        type: integer
+      pack_size:
+        type: integer
+    type: object
+host: https://cbhbw91cn7.execute-api.eu-west-1.amazonaws.com
+info:
+  contact: {}
+  description: Shipping is a small API that calculates packaging configuration for
+    a certain amount of ordered product quantity.
+  title: Shipping API docs
+  version: 1.0.0
+paths:
+  /v1/products/{id}/packaging:
+    get:
+      description: Calculates number of packets based on product configuration
+      parameters:
+      - description: ID of the product
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Order quantity for product
+        in: query
+        name: qty
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/shipping.PackConfig'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Get product packaging
+      tags:
+      - packaging
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Updates configuration for the specified product
+      parameters:
+      - description: ID of the product
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: The list of supported pack sizes
+        in: body
+        name: pack_sizes
+        required: true
+        schema:
+          items:
+            type: integer
+          type: array
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      summary: Update product packaging configuration
+      tags:
+      - packaging
+      - products
+swagger: "2.0"

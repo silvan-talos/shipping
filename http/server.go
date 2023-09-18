@@ -7,11 +7,18 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/silvan-talos/shipping"
+	_ "github.com/silvan-talos/shipping/docs"
 	"github.com/silvan-talos/shipping/product"
 )
 
+//	@title			Shipping API docs
+//	@description	Shipping is a small API that calculates packaging configuration for a certain amount of ordered product quantity.
+//	@version		1.0.0
+//	@host			https://cbhbw91cn7.execute-api.eu-west-1.amazonaws.com
 type Server struct {
 	router *gin.Engine
 }
@@ -41,6 +48,7 @@ func NewServer(args ServerArgs) *Server {
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "alive"})
 	})
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler, ginSwagger.InstanceName("ShippingAPI")))
 
 	return &Server{
 		router: r,
