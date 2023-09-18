@@ -47,26 +47,26 @@ func (s *service) CalculatePacksConfiguration(ctx context.Context, id, quantity 
 		log.Println("failed to get packs config, err:", err)
 		return nil, shipping.InternalServerErr
 	}
-	conf, minOverhead := overheadAlgorithm(int64(quantity), packSizes)
-	packConf, overhead := divisionAlgorithm(int64(quantity), packSizes)
+	ohConf, ohOverhead := overheadAlgorithm(int64(quantity), packSizes)
+	conf, divOverhead := divisionAlgorithm(int64(quantity), packSizes)
 	// choose better solution based on configuration accuracy
-	if overhead > minOverhead {
-		packConf = map[uint64]int64{conf.Size: conf.Count}
+	if divOverhead > ohOverhead {
+		conf = ohConf
 	}
 	// sort by pack size desc
-	keys := make([]uint64, 0, len(packConf))
-	for k := range packConf {
+	keys := make([]uint64, 0, len(conf))
+	for k := range conf {
 		keys = append(keys, k)
 	}
 	sort.Slice(keys, func(i, j int) bool {
 		return keys[i] > keys[j]
 	})
 	// convert packs to meaningful struct
-	packs := make([]shipping.PackConfig, 0, len(packConf))
+	packs := make([]shipping.PackConfig, 0, len(conf))
 	for _, k := range keys {
-		if packConf[k] > 0 {
+		if conf[k] > 0 {
 			packs = append(packs, shipping.PackConfig{
-				Count: packConf[k],
+				Count: conf[k],
 				Size:  k,
 			})
 		}
