@@ -149,9 +149,9 @@ const docTemplateShippingAPI = `{
 // SwaggerInfoShippingAPI holds exported Swagger Info so clients can modify it
 var SwaggerInfoShippingAPI = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "https://cbhbw91cn7.execute-api.eu-west-1.amazonaws.com",
+	Host:             "cbhbw91cn7.execute-api.eu-west-1.amazonaws.com",
 	BasePath:         "",
-	Schemes:          []string{},
+	Schemes:          []string{"https"},
 	Title:            "Shipping API docs",
 	Description:      "Shipping is a small API that calculates packaging configuration for a certain amount of ordered product quantity.",
 	InfoInstanceName: "ShippingAPI",

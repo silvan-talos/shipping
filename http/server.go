@@ -18,7 +18,8 @@ import (
 //	@title			Shipping API docs
 //	@description	Shipping is a small API that calculates packaging configuration for a certain amount of ordered product quantity.
 //	@version		1.0.0
-//	@host			https://cbhbw91cn7.execute-api.eu-west-1.amazonaws.com
+//	@host			cbhbw91cn7.execute-api.eu-west-1.amazonaws.com
+//	@schemes		https
 type Server struct {
 	router *gin.Engine
 }
