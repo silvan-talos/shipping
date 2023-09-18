@@ -196,3 +196,50 @@ func TestService_CalculatePacksConfiguration(t *testing.T) {
 		})
 	}
 }
+
+func TestService_UpdatePacksConfiguration(t *testing.T) {
+	tests := map[string]struct {
+		config      []uint64
+		packs       shipping.PackRepository
+		expectedErr error
+	}{
+		"configEmpty_invalidRequest": {
+			config:      []uint64{},
+			packs:       &mock.PackRepository{},
+			expectedErr: product.ErrInvalidConfig,
+		},
+		"productIdNotFound_returnErrNotFound": {
+			config: []uint64{100, 200},
+			packs: &mock.PackRepository{
+				UpdateConfigFn: func(ctx context.Context, productID uint64, config []uint64) error {
+					return shipping.ErrNotFound
+				},
+			},
+			expectedErr: shipping.ErrNotFound,
+		},
+		"failedToUpdateConfiguration_returnInternalError": {
+			config: []uint64{100, 200},
+			packs: &mock.PackRepository{
+				UpdateConfigFn: func(ctx context.Context, productID uint64, config []uint64) error {
+					return errors.New("failed to update config")
+				},
+			},
+			expectedErr: shipping.InternalServerErr,
+		},
+		"updateConfig_successful": {
+			config:      []uint64{250},
+			packs:       &mock.PackRepository{},
+			expectedErr: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			args := product.ServiceArgs{
+				Packs: tc.packs,
+			}
+			s := product.NewService(args)
+			err := s.UpdatePacksConfiguration(context.Background(), 1, tc.config)
+			require.Equal(t, tc.expectedErr, err)
+		})
+	}
+}
